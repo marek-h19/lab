@@ -1,49 +1,42 @@
-#include <iostream> 
+#include <iostream>
 #include <vector>
 
-/*
-calls ← 0
+static bool recursionA(std::size_t i, long long remaining, const std::vector<int>& A,
+                       std::vector<int>& chosen, long long& calls) {
+    ++calls; // pocet rekurzivnych volani
 
-SOLVE(i, currentSum, chosen):
-    calls ← calls + 1                  // základná operácia = 1 rekurzívne volanie
-    if i = n:                          // rozhodli sme o všetkých prvkoch (list stromu)
-        return remaining = 0 
-    // vetva 1: zober A[i]
-    chosen.push(i)
-    if SOLVE(i+1, currentSum - A[i], chosen): return true
-    chosen.pop()                       // backtrack, vrátime sa do pôvodného stavu
-    // vetva 2: preskoč A[i]
-    return SOLVE(i+1, currentSum, chosen)
+    if (i == A.size())             
+        return remaining == 0;
 
-Volanie: SOLVE(0, 0, []) → ak true, v chosen je riešenie, inak riešenie neexistuje
-*/
+    chosen.push_back(A[i]);      
+    if (recursionA(i + 1, remaining - A[i], A, chosen, calls))
+        return true;
+    chosen.pop_back(); // backtrack
 
-bool solve(std::size_t i, long long remaining, 
-    std::vector<int>& chosen, const std::vector<int>& Arr, long long& calls) {
-    ++calls; 
-
-    if (i == Arr.size()){
-        return remaining == 0; 
-    } 
-    chosen.push_back(Arr[i]);
-    if (solve(i+1, remaining - Arr[i], chosen, Arr, calls)){
-        return true; 
-    }
-    chosen.pop_back();
-    return solve(i + 1, remaining, chosen, Arr, calls);   
+    return recursionA(i + 1, remaining, A, chosen, calls);   // preskoc A[i]
 }
 
-int main (void){
-    std::vector<int> Arr = {3, 7, 11, 15, 19}; 
-    int sum = 30; 
-    long long calls = 0; 
+bool solveBaseline(const std::vector<int>& A, long long S,
+                   std::vector<int>& chosen, long long& calls) {
+    calls = 0;
+    chosen.clear();
+    return recursionA(0, S, A, chosen, calls);
+}
 
+static void demo(const std::vector<int>& A, long long S) {
     std::vector<int> chosen;
-    solve(0, sum, chosen, Arr, calls);
-
-    for (int i = 0; i < chosen.size(); i++) {
-        std::cout << chosen[i] << " "; 
+    long long calls = 0;
+    if (solveBaseline(A, S, chosen, calls)) {
+        std::cout << "solution:";
+        for (int x : chosen) std::cout << ' ' << x;
+    } else {
+        std::cout << "no solution";
     }
-    std::cout << "\nNumber of calls: " << calls << std::endl;
-    return 0; 
+    std::cout << ", calls = " << calls << '\n';
+}
+
+int main() {
+    demo({3, 7, 11, 15, 19}, 30);   // ma riesenie
+    demo({4, 8, 12, 16, 20}, 30);   // nema riesenie 
+    return 0;
 }
